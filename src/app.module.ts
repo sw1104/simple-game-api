@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { UserModule } from './user/user.module';
+import { BossRaidModule } from './boss-raid/boss-raid.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from './user/user.module';
       synchronize: Boolean(process.env.DATABASE_SYNCHRONIZE),
     }),
     UserModule,
+    BossRaidModule,
   ],
   controllers: [],
   providers: [],
