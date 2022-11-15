@@ -1,5 +1,11 @@
 import { UserEntity } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('boss_raid')
 export class BossRaidEntity {
@@ -9,10 +15,10 @@ export class BossRaidEntity {
   @Column()
   level: number;
 
-  @Column()
+  @Column({ default: 0 })
   score: number;
 
-  @Column({ type: 'timestamp', name: 'enter_time' })
+  @CreateDateColumn({ name: 'enter_time' })
   enterTime: Date;
 
   @Column({ type: 'timestamp', name: 'end_time', nullable: true })
