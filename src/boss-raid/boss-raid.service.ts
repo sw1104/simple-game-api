@@ -32,4 +32,14 @@ export class BossRaidService {
 
     return { isEntered: true, raidRecordId: data.user.id };
   }
+
+  public async getStatus() {
+    const raidEnterUser = await this.bossRaidRepository.findOne({
+      where: { endTime: IsNull() },
+      relations: ['user'],
+    });
+    if (!raidEnterUser) return { canEnter: true };
+
+    return { canEnter: false, enteredUserId: raidEnterUser.user.id };
+  }
 }
