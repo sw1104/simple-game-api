@@ -2,6 +2,8 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
+import { UserModule } from './user/user.module';
+import { BossRaidModule } from './boss-raid/boss-raid.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
       port: Number(process.env.DATABASE_PORT),
       synchronize: Boolean(process.env.DATABASE_SYNCHRONIZE),
     }),
+    UserModule,
+    BossRaidModule,
   ],
   controllers: [],
   providers: [],
