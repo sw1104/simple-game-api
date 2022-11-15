@@ -18,10 +18,15 @@ export class BossRaidEntity {
   @Column({ default: 0 })
   score: number;
 
-  @CreateDateColumn({ name: 'enter_time' })
+  @Column({ type: 'timestamp', name: 'enter_time' })
   enterTime: Date;
 
-  @Column({ type: 'timestamp', name: 'end_time', nullable: true })
+  @Column({
+    type: 'timestamp',
+    name: 'end_time',
+    nullable: true,
+    default: null,
+  })
   endTime: Date;
 
   @ManyToOne(() => UserEntity, (user) => user.bossRaid)

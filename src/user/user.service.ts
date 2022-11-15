@@ -22,7 +22,10 @@ export class UserService {
       relations: ['bossRaid'],
     });
     if (!user) throw new BadRequestException('존재하지 않는 유저 입니다.');
-
     return user;
+  }
+
+  public async userTotalScore(id: number, totalScore: number) {
+    await this.userRepository.update(id, { totalScore });
   }
 }
