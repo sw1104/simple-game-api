@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConsoleLogger,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,6 +11,9 @@ import { EnterBossRaidDto } from './dto/enter-boss-raid.dto';
 import { BossRaidEntity } from './entities/boss-raid.entity';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { InjectRedis } from '@liaoliaots/nestjs-redis';
+import Redis from 'ioredis';
+import { RankingInfo } from './interface/ranking-info.interface';
 
 @Injectable()
 export class BossRaidService {
@@ -20,6 +22,7 @@ export class BossRaidService {
     private bossRaidRepository: Repository<BossRaidEntity>,
     private userService: UserService,
     private httpService: HttpService,
+    @InjectRedis() private redis: Redis,
   ) {}
   public async enter(enterBossRaidDto: EnterBossRaidDto) {
     const user = await this.userService.userLookUp(enterBossRaidDto.userId);
@@ -88,6 +91,36 @@ export class BossRaidService {
         endTime: nowTime,
       });
       await this.userService.userTotalScore(raidEnterUser.user.id, totalScore);
+
+      await this.redis.zadd('ranking', totalScore, raidEnterUser.user.id);
     }
+  }
+
+  public async ranking(userId: number) {
+    const user = await this.userService.userLookUp(userId);
+    if (!user) throw new BadRequestException('존재하지 않는 유저입니다.');
+
+    const rankData = await this.redis.zrevrange('ranking', 0, -1, 'WITHSCORES');
+    const topRanking: RankingInfo[] = [];
+
+    for (let i = 0; i < rankData.length; i++) {
+      if (i % 2 === 0) {
+        const rankingInfo: RankingInfo = {
+          ranking: Math.floor(i / 2),
+          userId: parseInt(rankData[i]),
+          totalScore: 0,
+        };
+        topRanking.push(rankingInfo);
+      } else {
+        topRanking[Math.floor(i / 2)].totalScore = Number(rankData[i]);
+      }
+    }
+    const myRanking: RankingInfo = {
+      ranking: await this.redis.zrevrank('ranking', userId),
+      userId,
+      totalScore: Number(await this.redis.zscore('ranking', userId)),
+    };
+
+    return { topRankerInfoList: topRanking, myRankingInfo: myRanking };
   }
 }
