@@ -50,7 +50,6 @@ export class BossRaidService {
       where: { endTime: IsNull() },
       relations: ['user'],
     });
-    console.log(raidEnterUser);
     if (!raidEnterUser) return { canEnter: true };
 
     return { canEnter: false, enteredUserId: raidEnterUser.user.id };
@@ -84,14 +83,13 @@ export class BossRaidService {
       await this.bossRaidRepository.update(endBossRaidDto.raidRecordId, {
         endTime: nowTime,
       });
-      throw new NotFoundException('시간 종료');
+      return { message: '시간 종료' };
     } else {
       await this.bossRaidRepository.update(endBossRaidDto.raidRecordId, {
         score: score,
         endTime: nowTime,
       });
       await this.userService.userTotalScore(raidEnterUser.user.id, totalScore);
-
       await this.redis.zadd('ranking', totalScore, raidEnterUser.user.id);
     }
   }
@@ -101,8 +99,13 @@ export class BossRaidService {
     if (!user) throw new BadRequestException('존재하지 않는 유저입니다.');
 
     const rankData = await this.redis.zrevrange('ranking', 0, -1, 'WITHSCORES');
-    const topRanking: RankingInfo[] = [];
 
+    const myRanking = {
+      ranking: await this.redis.zrevrank('ranking', userId),
+      userId,
+      totalScore: Number(await this.redis.zscore('ranking', userId)),
+    };
+    const topRanking = [];
     for (let i = 0; i < rankData.length; i++) {
       if (i % 2 === 0) {
         const rankingInfo: RankingInfo = {
@@ -115,12 +118,6 @@ export class BossRaidService {
         topRanking[Math.floor(i / 2)].totalScore = Number(rankData[i]);
       }
     }
-    const myRanking: RankingInfo = {
-      ranking: await this.redis.zrevrank('ranking', userId),
-      userId,
-      totalScore: Number(await this.redis.zscore('ranking', userId)),
-    };
-
     return { topRankerInfoList: topRanking, myRankingInfo: myRanking };
   }
 }
